@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+  wazuh:
+    image: wazuh/wazuh:latest
+    container_name: wazuh
+    ports:
+      - "1514:1514/udp"
+      - "1515:1515"
+      - "55000:55000"
+      - "5601:5601"
+      - "9200:9200"
+    volumes:
+      - wazuh-data:/var/ossec/data
+    restart: always
+
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa
+    ports:
+      - "8080:80"
+    environment:
+      - MYSQL_PASS=password
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=dvwa
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  wazuh-data:
+  mysql-data:

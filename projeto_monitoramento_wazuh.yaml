@@ -1,0 +1,135 @@
+# Projeto Final - Monitoramento de Container com Wazuh
+
+Este projeto tem como objetivo demonstrar o uso do Wazuh para monitoramento de segurança em um ambiente com containers Docker. A aplicação vulnerável escolhida é o DVWA (Damn Vulnerable Web Application).
+
+---
+
+## 🧱 Arquitetura do Projeto
+
+- **Wazuh**: SIEM para coleta e correlação de logs.
+- **DVWA**: aplicação propositalmente vulnerável para testes de segurança.
+- **MySQL**: banco de dados usado pela DVWA.
+
+---
+
+## ▶️ Como Executar o Projeto
+
+### 1. Clone o repositório
+```bash
+git clone https://github.com/seu-usuario/projeto-monitoramento-wazuh.git
+cd projeto-monitoramento-wazuh
+```
+
+### 2. Suba os containers
+```bash
+docker-compose up -d
+```
+
+Acesse a DVWA em: [http://localhost:8080](http://localhost:8080)  
+Acesse o Wazuh em: [http://localhost:5601](http://localhost:5601) (usuário padrão: `admin`, senha: `admin`)
+
+---
+
+## 🧪 Ataques Simulados
+
+- **SQL Injection** com `sqlmap`:
+```bash
+sqlmap -u "http://localhost:8080/vulnerable_page.php?id=1" --batch --dbs
+```
+
+- **Força bruta** com `hydra`:
+```bash
+hydra -l admin -P /usr/share/wordlists/rockyou.txt 127.0.0.1 http-post-form "/login.php:username=^USER^&password=^PASS^:Login failed"
+```
+
+---
+
+## 🔎 Monitoramento com Wazuh
+
+Verifique no dashboard do Wazuh os alertas gerados pelos ataques simulados. Use os filtros de data e nível de severidade para encontrar eventos críticos.
+
+---
+
+## 📂 Estrutura do Projeto
+
+```
+projeto-monitoramento-wazuh/
+├── docker-compose.yml
+├── ataques/
+│   ├── sqlmap.sh
+│   └── hydra.sh
+├── evidencias/
+│   ├── alerta_sql_injection.png
+│   ├── alerta_bruteforce.png
+│   └── video_apresentacao.mp4
+└── README.md
+```
+
+---
+
+## ✅ Requisitos Atendidos
+
+- [x] Monitoramento com Wazuh
+- [x] Ambiente Docker funcional
+- [x] Simulação de ataques
+- [x] Evidências de alertas
+- [x] Relatório e vídeo explicativo
+
+---
+
+## 📌 Observações
+
+- Para testes realistas, ajuste o nível de segurança do DVWA para "Low".
+- Caso utilize Wazuh em outro host, certifique-se de configurar o agente corretamente no container DVWA.
+
+---
+
+## 📧 Contato
+
+Autor: Seu Nome  
+Email: seu.email@dominio.com
+
+---
+
+## 🛠️ Arquivo docker-compose.yml
+
+```yaml
+version: '3.7'
+
+services:
+  wazuh:
+    image: wazuh/wazuh:latest
+    container_name: wazuh
+    ports:
+      - "1514:1514/udp"
+      - "1515:1515"
+      - "55000:55000"
+      - "5601:5601"
+      - "9200:9200"
+    volumes:
+      - wazuh-data:/var/ossec/data
+    restart: always
+
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa
+    ports:
+      - "8080:80"
+    environment:
+      - MYSQL_PASS=password
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=dvwa
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  wazuh-data:
+  mysql-data:
+```
